@@ -180,9 +180,9 @@ def get_data_loaders(k_order, batch_size):
     Returns:
         data_loader: DataLoader
     """
-    network_path = r'../data/beijing_roadnet.gpickle'
-    node_attr_path = r'../data/edges_data.h5'
-    accident_path = r'../data/accident.h5'
+    network_path = r'../data/newyork_roadnet_test.gpickle'
+    node_attr_path = r'../data/edges_data_test.h5'
+    accident_path = r'../data/accident_10.h5'
     weather_path = "../data/weather.h5"
     speed_path = "../data/all_grids_speed.h5"
 
@@ -194,7 +194,8 @@ def get_data_loaders(k_order, batch_size):
 
     network = nx.read_gpickle(network_path)
     # XCoord  YCoord LENGTH  NUM_NODE
-    nodes = pd.read_hdf(node_attr_path)
+    # nodes = pd.read_hdf(node_attr_path)
+    nodes = pd.read_csv(node_attr_path)
     # 'valid_time', 'temp', 'dewPt', 'rh', 'pressure', 'wspd', 'feels_like',  ......
     weather = pd.read_hdf(weather_path)
 

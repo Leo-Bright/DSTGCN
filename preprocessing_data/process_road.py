@@ -1,7 +1,7 @@
 import networkx as nx
 import pandas as pd
 
-data = pd.read_csv(r'/home/huxiao/Data/Beijing_road_net/edges.csv', header=0)
+data = pd.read_csv(r'D:/Project/pyCharmProjects/DSTGCN/data/NewYork_Edgelist_test.csv', header=0)
 edges_as_nodes = data.groupby('EDGE').agg({'XCoord': 'mean',
                                            'YCoord': 'mean',
                                            'START_NODE': 'nunique',
@@ -27,7 +27,7 @@ adjacency_as_edges = adjacency_as_edges.union(
 
 g.add_edges_from(adjacency_as_edges)
 g = nx.convert_node_labels_to_integers(g)
-nx.write_gpickle(g, 'data/beijing_roadnet.gpickle')
+nx.write_gpickle(g, 'D:/Project/pyCharmProjects/DSTGCN/data/newyork_roadnet_test.gpickle')
 
 # For read road network in Beijing.
 # nx.read_gpickle('data/beijing_roadnet.gpickle')

@@ -205,8 +205,8 @@ def make_external_features(weather_path: str):
 if __name__ == '__main__':
     # excute for only once
     # getFeatureRawData()
-    baseFilePath = "/home/yule/文档/weatherData"
-    outWeatherCSVPath = "/home/yule/桌面/traffic_accident_data/weather.csv"
+    baseFilePath = "D:/Project/pyCharmProjects/DSTGCN/data"
+    outWeatherCSVPath = "D:/Project/pyCharmProjects/DSTGCN/data/weather.csv"
     #  generate csv files
     # convertJsonToCSV(baseFilePath)
     # checkCSVData(baseFilePath)
