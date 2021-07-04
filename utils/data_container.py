@@ -183,8 +183,10 @@ def get_data_loaders(k_order, batch_size):
     network_path = r'../data/newyork_roadnet_test.gpickle'
     node_attr_path = r'../data/edges_data_test.h5'
     accident_path = r'../data/accident_10.h5'
-    weather_path = "../data/weather.h5"
-    speed_path = "../data/all_grids_speed.h5"
+    # weather_path = "../data/weather.h5"
+    weather_path = "../data/weather_test.csv"
+    # speed_path = "../data/all_grids_speed.h5"
+    speed_path = "../data/all_grids_speed_test.csv"
 
     sf_mean, sf_std = np.array(get_attribute('spatial_features_mean')), np.array(get_attribute('spatial_features_std'))
     tf_mean, tf_std = np.array(get_attribute('temporal_features_mean')), np.array(
@@ -197,9 +199,11 @@ def get_data_loaders(k_order, batch_size):
     # nodes = pd.read_hdf(node_attr_path)
     nodes = pd.read_csv(node_attr_path)
     # 'valid_time', 'temp', 'dewPt', 'rh', 'pressure', 'wspd', 'feels_like',  ......
-    weather = pd.read_hdf(weather_path)
+    # weather = pd.read_hdf(weather_path)
+    weather = pd.read_csv(weather_path)
 
-    speed = fill_speed(pd.read_hdf(speed_path))
+    # speed = fill_speed(pd.read_hdf(speed_path))
+    speed = fill_speed(pd.read_csv(speed_path))
 
     dls = dict()
     for key in ['train', 'validate', 'test']:

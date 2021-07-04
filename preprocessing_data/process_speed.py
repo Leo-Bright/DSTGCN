@@ -297,7 +297,7 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
         dailyDataFrame["latitude"] = dailyDataFrame["latitude"].astype(float)
         dailyDataFrame["speed"] = dailyDataFrame["speed"].astype(float)
         # 去掉在划分的网格区域外的数据
-        dailyDataFrame = dailyDataFrame[dailyDataFrame.apply(lambda x : x["longitude"] >= longitudeMin and x["longitude"] <= longitudeMax and x["latitude"] >= latitudeMin
+        dailyDataFrame = dailyDataFrame[dailyDataFrame.apply(lambda x: x["longitude"] >= longitudeMin and x["longitude"] <= longitudeMax and x["latitude"] >= latitudeMin
                                                          and x["latitude"] <= latitudeMax, axis=1)]
         print("remove not in grids range taxi data, dailyContent length is ", len(dailyDataFrame))
         allGridsTaxiData = [[defaultdict(list) for j in range(width + 1)] for i in range(height + 1)]
@@ -335,7 +335,7 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
 
 
 # 得到每个网格的出租车速度,使用多线程方法
-def getGridTaxiSpeedMultiKernel(baseFilePath, kernel = 16):
+def getGridTaxiSpeedMultiKernel(baseFilePath, kernel=16):
 
     dailyFilePathList = os.listdir(baseFilePath)
     eachKernelFileCount = int(math.ceil(len(dailyFilePathList) / kernel))
@@ -346,7 +346,7 @@ def getGridTaxiSpeedMultiKernel(baseFilePath, kernel = 16):
         endIndex = i + eachKernelFileCount
         if(endIndex > len(dailyFilePathList)):
             endIndex = len(dailyFilePathList)
-        pool.apply_async(getGridTaxiSpeed, (baseFilePath, dailyFilePathList[i : endIndex]))
+        pool.apply_async(getGridTaxiSpeed, (baseFilePath, dailyFilePathList[i: endIndex]))
     pool.close()
     pool.join()
 

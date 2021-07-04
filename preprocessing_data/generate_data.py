@@ -24,10 +24,10 @@ latitudeMax = 40.17647
 longitudeMin, latitudeMin = convert_by_type(lng=longitudeMin, lat=latitudeMin, type="g2w")
 longitudeMax, latitudeMax = convert_by_type(lng=longitudeMax, lat=latitudeMax, type="g2w")
 
-accident_path = "D:/Project/pyCharmProjects/DSTGCN/data/accident_test.csv"
+accident_path = "../data/accident_test.csv"
 accident_data = pd.read_csv(accident_path, header=0)
 
-edges_path = "D:/Project/pyCharmProjects/DSTGCN/data/edges_data_test.h5"
+edges_path = "../data/edges_data_test.h5"
 # nodes = pd.read_hdf(edges_path)
 nodes = pd.read_csv(edges_path)
 
