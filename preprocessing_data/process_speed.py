@@ -14,10 +14,14 @@ divideBound = 5
 file_count = 0
 floatBitNumber = 8
 
-longitudeMin = 116.09608
-longitudeMax = 116.71040
-latitudeMin = 39.69086
-latitudeMax = 40.17647
+# longitudeMin = 116.09608
+# longitudeMax = 116.71040
+# latitudeMin = 39.69086
+# latitudeMax = 40.17647
+longitudeMin = -74.891
+longitudeMax = -73.72294
+latitudeMin = 40.52419
+latitudeMax = 40.90706
 # 网格的划分
 widthSingle = 0.01 / math.cos(latitudeMin / 180 * math.pi) / divideBound
 width = math.floor((longitudeMax - longitudeMin) / widthSingle)
@@ -262,7 +266,7 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
     # 选取的距离监控路段的距离为1110m内的poi, 南北走向 1110m 相当于 1 / 100 度 0.01度, 东西走向1110m 相当于 1 / (100 * cosθ), 0.01 / cosθ
     # 对每天的出租车GPS数据进行读取,去掉在划分的网格区域外的数据, 之后计算划分的网格每天的速度
     attributeList = ['longitude', 'latitude', 'speed', 'time']
-    index_list = [4, 5, 6, 10]
+    index_list = [6, 6, 1, 4]
     # 读取每天的出租车数据文件
     for dailyFile in filePathList:
         PATH = os.path.join(baseFilePath, dailyFile)
@@ -279,18 +283,28 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
         print("dailyContent length is ", len(dailyContent))
         dailyDic = defaultdict(list)
         for line in dailyContent:
-            if (len(line) != 11):
+            if (len(line) != 13):
                 continue
             # 过滤所有速度为0的点
             # if (isZeroSpeed(line[6])):
             #     continue
-            if (not isValidDate(line[10][:-1])):
+            speed_date_time_str = line[4][:-4]
+            speed_date_time = speed_date_time_str[:10] + ' ' + speed_date_time_str[-8:]
+            if not isValidDate(speed_date_time):
+                print('=================time format is invalid')
                 continue
             for i, index in enumerate(index_list):
                 # remove last position semicolon ;
-                if (i == len(index_list) - 1):
-                    line[index] = line[index][:-1]
-                dailyDic[attributeList[i]].append(line[index])
+                # if (i == len(index_list) - 1):
+                #     line[index] = line[index][:-1]
+                if i == 0:
+                    val = line[index][:8]
+                    dailyDic[attributeList[i]].append(val)
+                elif i == 1:
+                    val = line[index][9:18]
+                    dailyDic[attributeList[i]].append(val)
+                else:
+                    dailyDic[attributeList[i]].append(line[index])
         print("remove 0 speed, dailyContent length is ", len(dailyDic["speed"]))
         dailyDataFrame = pd.DataFrame(dailyDic)
         dailyDataFrame["longitude"] = dailyDataFrame["longitude"].astype(float)
@@ -396,7 +410,7 @@ def move_grids_speed_files(baseFilePath):
 
 
 if __name__ == "__main__":
-    baseFilePath = "/home/yule/文档/BeijingTaxi/data"
+    baseFilePath = "D:/Project/pyCharmProjects/DSTGCN/data/speed_data"
     # roadAccidentCountCSVPath = "/home/yule/文档/accident/roadAccidentCount.csv"
     inputRoadMonitorLocationLongLatPath = "/home/yule/文档/accident/SelectedRoadPoints.csv"
 
@@ -406,9 +420,9 @@ if __name__ == "__main__":
     # countFiles(baseFilePath)
     # readTXTFiles(baseFilePath)
 
-    # getGridTaxiSpeed(baseFilePath, os.listdir(baseFilePath))
+    getGridTaxiSpeed(baseFilePath, os.listdir(baseFilePath))
     # getGridTaxiSpeedMultiKernel(baseFilePath, 16)
 
     # getGridPoints()
     # move_grids_speed_files(baseFilePath)
-    merge_all_grids_speed("/home/yule/桌面/traffic_accident_data/beijing_grids_speed")
+    # merge_all_grids_speed("/home/yule/桌面/traffic_accident_data/beijing_grids_speed")
