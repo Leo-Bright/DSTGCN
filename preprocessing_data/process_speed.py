@@ -266,7 +266,7 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
     # 选取的距离监控路段的距离为1110m内的poi, 南北走向 1110m 相当于 1 / 100 度 0.01度, 东西走向1110m 相当于 1 / (100 * cosθ), 0.01 / cosθ
     # 对每天的出租车GPS数据进行读取,去掉在划分的网格区域外的数据, 之后计算划分的网格每天的速度
     attributeList = ['longitude', 'latitude', 'speed', 'time']
-    index_list = [6, 6, 1, 4]
+    index_list = [0, 1, 2, 3]
     # 读取每天的出租车数据文件
     for dailyFile in filePathList:
         PATH = os.path.join(baseFilePath, dailyFile)
@@ -283,13 +283,13 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
         print("dailyContent length is ", len(dailyContent))
         dailyDic = defaultdict(list)
         for line in dailyContent:
-            if (len(line) != 13):
+            if (len(line) != 4):
+                print(line)
                 continue
             # 过滤所有速度为0的点
             # if (isZeroSpeed(line[6])):
             #     continue
-            speed_date_time_str = line[4][:-4]
-            speed_date_time = speed_date_time_str[:10] + ' ' + speed_date_time_str[-8:]
+            speed_date_time = line[3]
             if not isValidDate(speed_date_time):
                 print('=================time format is invalid')
                 continue
@@ -297,14 +297,7 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
                 # remove last position semicolon ;
                 # if (i == len(index_list) - 1):
                 #     line[index] = line[index][:-1]
-                if i == 0:
-                    val = line[index][:8]
-                    dailyDic[attributeList[i]].append(val)
-                elif i == 1:
-                    val = line[index][9:18]
-                    dailyDic[attributeList[i]].append(val)
-                else:
-                    dailyDic[attributeList[i]].append(line[index])
+                dailyDic[attributeList[i]].append(line[index])
         print("remove 0 speed, dailyContent length is ", len(dailyDic["speed"]))
         dailyDataFrame = pd.DataFrame(dailyDic)
         dailyDataFrame["longitude"] = dailyDataFrame["longitude"].astype(float)
@@ -410,6 +403,7 @@ def move_grids_speed_files(baseFilePath):
 
 
 if __name__ == "__main__":
+
     baseFilePath = "D:/Project/pyCharmProjects/DSTGCN/data/speed_data"
     # roadAccidentCountCSVPath = "/home/yule/文档/accident/roadAccidentCount.csv"
     inputRoadMonitorLocationLongLatPath = "/home/yule/文档/accident/SelectedRoadPoints.csv"
