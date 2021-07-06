@@ -3,6 +3,8 @@ import time
 import re
 import os
 import pandas as pd
+import math
+import multiprocessing
 
 
 def gen_weather():
@@ -152,6 +154,30 @@ def extract_speed_colums_daily(baseFilePath, monthFileList):
             daily_speed_csv.writerows(daily_speed_data)
 
 
+def extract_speed_colums_multi_kernal(baseFilePath, kernel=8):
+
+    pool = []
+    dailyFilePathList = []
+    file_paths = os.listdir(baseFilePath)
+    for file_path in file_paths:
+        if file_path.find('\.csv') > -1:
+            dailyFilePathList.append(file_path)
+
+    eachKernelFileCount = int(math.ceil(len(dailyFilePathList) / kernel))
+
+    for i in range(0, len(dailyFilePathList), eachKernelFileCount):
+        endIndex = i + eachKernelFileCount
+        if (endIndex > len(dailyFilePathList)):
+            endIndex = len(dailyFilePathList)
+        process = multiprocessing.Process(target=extract_speed_colums_daily, args=(baseFilePath, dailyFilePathList[i: endIndex]))
+        # pool.apply_async(getGridTaxiSpeed, (baseFilePath, dailyFilePathList[i: endIndex]))
+        process.start()
+        pool.append(process)
+
+    for process in pool:
+        process.join()
+
+
 if __name__ == '__main__':
 
     timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
@@ -164,15 +190,16 @@ if __name__ == '__main__':
     #     print(row1)
 
     for eathTime in timeRange:
-        print('===')
+        print(eathTime)
 
     baseFilePath = "E:/Nicole_bak/Nicole_data/Real-Time Traffic Speed Data"
 
     # stat_coords()
 
     # extract_speed_colums_daily(baseFilePath, os.listdir(baseFilePath))
-    extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_10.csv',
-                                              'DOT_Traffic_Speeds_NBE_API_2018_11.csv',
-                                              'DOT_Traffic_Speeds_NBE_API_2018_12.csv'])
+    # extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_10.csv',
+    #                                           ])
+
+    extract_speed_colums_multi_kernal(baseFilePath, 4)
 
 
