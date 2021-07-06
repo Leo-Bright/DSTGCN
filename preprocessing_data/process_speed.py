@@ -260,7 +260,7 @@ def getRoadSpeed(baseFilePath, roadMonitorLocationLongLatPath):
 
 
 # 得到每个网格的速度
-def getGridTaxiSpeed(baseFilePath, filePathList):
+def getGridTaxiSpeed(baseFilePath, dailyFilePathList):
     # 在经线上，纬度每差1度,实地距离大约为111千米；
     # 在纬线上，经度每差1度, 实际距离为111×cosθ千米。（其中θ表示该纬线的纬度.在不同纬线上, 经度每差1度的实际距离是不相等的）。
     # 选取的距离监控路段的距离为1110m内的poi, 南北走向 1110m 相当于 1 / 100 度 0.01度, 东西走向1110m 相当于 1 / (100 * cosθ), 0.01 / cosθ
@@ -268,44 +268,51 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
     attributeList = ['longitude', 'latitude', 'speed', 'time']
     index_list = [0, 1, 2, 3]
     # 读取每天的出租车数据文件
-    for dailyFile in filePathList:
-        PATH = os.path.join(baseFilePath, dailyFile)
+    for dailyFilePath in dailyFilePathList:
+        PATH = os.path.join(baseFilePath, dailyFilePath)
         txt_filePath_list = os.listdir(PATH)
         # 将一天的所有数据读入到listContent中
-        listContent = []
+        # listContent = []
+        dailyContent = []
+        dailyDic = defaultdict(list)
         for txt_filePath in txt_filePath_list:
             print(txt_filePath)
-            in_txt = csv.reader(open(os.path.join(baseFilePath, dailyFile, txt_filePath), "r"), delimiter=',',
+            in_txt = csv.reader(open(os.path.join(baseFilePath, dailyFilePath, txt_filePath), "r"), delimiter=',',
                                 escapechar='\n')
-            listContent.append(list(in_txt))
+            # listContent.append(list(in_txt))
+
+            for line in in_txt:
+                if (len(line) != 4):
+                    print(line)
+                    continue
+                # 过滤所有速度为0的点
+                # if (isZeroSpeed(line[6])):
+                #     continue
+                speed_date_time = line[3]
+                if not isValidDate(speed_date_time):
+                    print('=================time format is invalid')
+                    continue
+                lon = float(line[0])
+                lat = float(line[1])
+                if lon < longitudeMin or lon > longitudeMax or lat < latitudeMin or lat > latitudeMax:
+                    continue
+                for i, index in enumerate(index_list):
+                    dailyDic[attributeList[i]].append(line[index])
+                dailyContent.append(line)
+
         # add daily information in one list
-        dailyContent = [minuteStep for hourAll in listContent for minuteStep in hourAll]
-        print("dailyContent length is ", len(dailyContent))
-        dailyDic = defaultdict(list)
-        for line in dailyContent:
-            if (len(line) != 4):
-                print(line)
-                continue
-            # 过滤所有速度为0的点
-            # if (isZeroSpeed(line[6])):
-            #     continue
-            speed_date_time = line[3]
-            if not isValidDate(speed_date_time):
-                print('=================time format is invalid')
-                continue
-            for i, index in enumerate(index_list):
-                # remove last position semicolon ;
-                # if (i == len(index_list) - 1):
-                #     line[index] = line[index][:-1]
-                dailyDic[attributeList[i]].append(line[index])
+        # dailyContent = [minuteStep for hourAll in listContent for minuteStep in hourAll]
+        # print("dailyContent length is ", len(dailyContent))
+
         print("remove 0 speed, dailyContent length is ", len(dailyDic["speed"]))
         dailyDataFrame = pd.DataFrame(dailyDic)
         dailyDataFrame["longitude"] = dailyDataFrame["longitude"].astype(float)
         dailyDataFrame["latitude"] = dailyDataFrame["latitude"].astype(float)
         dailyDataFrame["speed"] = dailyDataFrame["speed"].astype(float)
         # 去掉在划分的网格区域外的数据
-        dailyDataFrame = dailyDataFrame[dailyDataFrame.apply(lambda x: x["longitude"] >= longitudeMin and x["longitude"] <= longitudeMax and x["latitude"] >= latitudeMin
-                                                         and x["latitude"] <= latitudeMax, axis=1)]
+        # dailyDataFrame = dailyDataFrame[dailyDataFrame.apply(lambda x: x["longitude"] >= longitudeMin
+        # and x["longitude"] <= longitudeMax and x["latitude"] >= latitudeMin and x["latitude"] <= latitudeMax, axis=1)]
+
         print("remove not in grids range taxi data, dailyContent length is ", len(dailyDataFrame))
         allGridsTaxiData = [[defaultdict(list) for j in range(width + 1)] for i in range(height + 1)]
         print("generate allGridsTaxiData.")
@@ -324,10 +331,12 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
         print("dailyDataFrame has divided into grids.")
         # 存储所有网格的速度Series序列
         allGridsSpeedDic = {}
-        timeRange = pd.date_range(dailyFile, periods=24, freq="1H")
+        # 这里的dailyFilePath其实是个日期字符串
+        timeRange = pd.date_range(dailyFilePath, periods=24, freq="1H")
         for row in range(height + 1):
+            print("deal with %d row " % (row))
             for column in range(width + 1):
-                print("deal with %d row and %d column" %(row, column))
+                # print("deal with %d row and %d column" %(row, column))
                 gridDataFrame = pd.DataFrame(allGridsTaxiData[row][column])
                 # 网格中该天一个出租车数据点都没有
                 if(len(gridDataFrame) == 0):
@@ -344,18 +353,21 @@ def getGridTaxiSpeed(baseFilePath, filePathList):
 # 得到每个网格的出租车速度,使用多线程方法
 def getGridTaxiSpeedMultiKernel(baseFilePath, kernel=16):
 
+    pool = []
+
     dailyFilePathList = os.listdir(baseFilePath)
     eachKernelFileCount = int(math.ceil(len(dailyFilePathList) / kernel))
-
-    pool = multiprocessing.Pool(processes=kernel)
 
     for i in range(0, len(dailyFilePathList), eachKernelFileCount):
         endIndex = i + eachKernelFileCount
         if(endIndex > len(dailyFilePathList)):
             endIndex = len(dailyFilePathList)
-        pool.apply_async(getGridTaxiSpeed, (baseFilePath, dailyFilePathList[i: endIndex]))
-    pool.close()
-    pool.join()
+        process = multiprocessing.Process(target=getGridTaxiSpeed, args=(baseFilePath, dailyFilePathList[i: endIndex]))
+        # pool.apply_async(getGridTaxiSpeed, (baseFilePath, dailyFilePathList[i: endIndex]))
+        process.start()
+        pool.append(process)
+    for process in pool:
+        process.join()
 
 
 def merge_all_grids_speed(baseFilePath):
@@ -363,12 +375,17 @@ def merge_all_grids_speed(baseFilePath):
     all_grids_speed_dataframe = pd.DataFrame()
     dailyFilePathList = os.listdir(baseFilePath)
     # 查找每天文件夹下的girdsSpeed.csv文件
-    for dailyFile in tqdm(dailyFilePathList):
-        PATH = os.path.join(baseFilePath, dailyFile)
+    count = 0
+    for dailyFilePath in tqdm(dailyFilePathList):
+        count += 1
+        PATH = os.path.join(baseFilePath, dailyFilePath)
         if not os.path.isdir(PATH):
             continue
         gridsSpeedDataFrame = pd.read_csv(os.path.join(PATH, "gridsSpeed.csv"), index_col=0, parse_dates=True)
         all_grids_speed_dataframe = pd.concat([all_grids_speed_dataframe, gridsSpeedDataFrame], axis=0)
+
+        if count == 2:
+            pass
 
     all_grids_speed_dataframe.to_csv(baseFilePath + "/all_grids_speed.csv")
     print(baseFilePath + "/all_grids_speed.csv writes successfully.")
@@ -414,9 +431,9 @@ if __name__ == "__main__":
     # countFiles(baseFilePath)
     # readTXTFiles(baseFilePath)
 
-    getGridTaxiSpeed(baseFilePath, os.listdir(baseFilePath))
-    # getGridTaxiSpeedMultiKernel(baseFilePath, 16)
+    # getGridTaxiSpeed(baseFilePath, os.listdir(baseFilePath))
+    # getGridTaxiSpeedMultiKernel(baseFilePath, 6)
 
     # getGridPoints()
     # move_grids_speed_files(baseFilePath)
-    # merge_all_grids_speed("/home/yule/桌面/traffic_accident_data/beijing_grids_speed")
+    merge_all_grids_speed(baseFilePath)

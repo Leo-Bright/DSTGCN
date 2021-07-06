@@ -2,6 +2,7 @@ import csv
 import time
 import re
 import os
+import pandas as pd
 
 
 def gen_weather():
@@ -88,67 +89,90 @@ def stat_coords():
         print("lat:", lat_Min, lat_Max)
 
 
-def extract_speed_colums(baseFilePath, filePathList):
+def extract_speed_colums_daily(baseFilePath, monthFileList):
 
-    origin_date_format = '%m/%d/%Y %I:%M:%S %p'
+    # origin_date_format = '%m/%d/%Y %I:%M:%S %p'
+    origin_date_format = '%Y-%m-%dT%H:%M:%S.000'
     new_date_format = "%Y-%m-%d %H:%M:%S"
 
-    for dailyFile in filePathList:
+    for monthFile in monthFileList:
 
-        new_speed_data = []
-        PATH = os.path.join(baseFilePath, dailyFile)
-        speed_filePath_list = os.listdir(PATH)
+        new_speed_dict = {}
 
-        for speed_filePath in speed_filePath_list:
+        month_file_path = os.path.join(baseFilePath, monthFile)
+        print(month_file_path)
 
-            speed_csv = csv.reader(open(os.path.join(baseFilePath, dailyFile, speed_filePath)))
-            headers = next(speed_csv)
+        month_speed_csv = csv.reader(open(month_file_path))
+        headers = next(month_speed_csv)
 
-            for row in speed_csv:
-                speed = row[1]
-                date_time = row[4]
-                date_tuple = time.strptime(date_time, origin_date_format)
-                new_date_time = time.strftime(new_date_format, date_tuple)
-                lat_lons = row[6]
-                sub_lat_idx = [sub_lat.start() for sub_lat in re.finditer('40\.', lat_lons)]
-                for i in range(len(sub_lat_idx)):
-                    new_speed_row = []
-                    if i == len(sub_lat_idx) - 1:
-                        lat_lon_last = lat_lons[sub_lat_idx[i]:].strip()
-                        if lat_lon_last.find(' ') > -1:
-                            lat_lon = lat_lon_last.rsplit(' ', 1)[0].split(',')
-                        else:
-                            lat_lon = lat_lon_last.split(',')
-                        if len(lat_lon) != 2:
-                            continue
-                        elif len(lat_lon[-1]) < 3:
-                            continue
-                        else:
-                            lat = lat_lon[0].strip()
-                            lon = lat_lon[1].strip()
+        for row in month_speed_csv:
+            speed = row[1]
+            date_time = row[4]
+            date_tuple = time.strptime(date_time, origin_date_format)
+            new_date_time = time.strftime(new_date_format, date_tuple)
+            new_date = new_date_time[:10]
+            daily_file_folder = os.path.join(baseFilePath, new_date)
+            if not os.path.exists(daily_file_folder):
+                os.makedirs(daily_file_folder)
+            if new_date not in new_speed_dict:
+                new_speed_dict[new_date] = []
+            lat_lons = row[6]
+            sub_lat_idx = [sub_lat.start() for sub_lat in re.finditer('40\.', lat_lons)]
+            for i in range(len(sub_lat_idx)):
+                new_speed_row = []
+                if i == len(sub_lat_idx) - 1:
+                    lat_lon_last = lat_lons[sub_lat_idx[i]:].strip()
+                    if lat_lon_last.find(' ') > -1:
+                        lat_lon = lat_lon_last.rsplit(' ', 1)[0].split(',')
                     else:
-                        lat, lon = lat_lons[sub_lat_idx[i]: sub_lat_idx[i+1]].strip().split(',')
-                    if lon.find(' ') > -1:
-                        print(lat_lons)
-                        print(sub_lat_idx)
-                        print(lat)
-                        print(lon)
-                    new_speed_row.append(lon)
-                    new_speed_row.append(lat)
-                    new_speed_row.append(speed)
-                    new_speed_row.append(new_date_time)
-                    new_speed_data.append(new_speed_row)
+                        lat_lon = lat_lon_last.split(',')
+                    if len(lat_lon) != 2:
+                        continue
+                    elif len(lat_lon[-1]) < 3:
+                        continue
+                    else:
+                        lat = lat_lon[0].strip()
+                        lon = lat_lon[1].strip()
+                else:
+                    lat, lon = lat_lons[sub_lat_idx[i]: sub_lat_idx[i+1]].strip().split(',')
+                if lon.find(' ') > -1:
+                    print(lat_lons)
+                    print(sub_lat_idx)
+                    print(lat)
+                    print(lon)
+                new_speed_row.append(lon)
+                new_speed_row.append(lat)
+                new_speed_row.append(speed)
+                new_speed_row.append(new_date_time)
+                new_speed_dict[new_date].append(new_speed_row)
 
-        new_speed_csv = csv.writer(open(os.path.join(baseFilePath, dailyFile, 'gridsSpeed.csv'), 'w+', newline=''))
-        new_speed_csv.writerows(new_speed_data)
+        for _date in new_speed_dict:
+            daily_speed_data = new_speed_dict[_date]
+            daily_speed_csv = csv.writer(open(os.path.join(baseFilePath, _date, 'speed_data.csv'), 'w+', newline=''))
+            daily_speed_csv.writerows(daily_speed_data)
 
 
 if __name__ == '__main__':
 
-    baseFilePath = "D:/Project/pyCharmProjects/DSTGCN/data/speed_data"
+    timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
+
+    # with open('data/speed_data/all_grids_speed.csv') as f:
+    #     speed = csv.reader(f)
+    #     headers = next(speed)
+    #     row1 = next(speed)
+    #     print(headers)
+    #     print(row1)
+
+    for eathTime in timeRange:
+        print('===')
+
+    baseFilePath = "E:/Nicole_bak/Nicole_data/Real-Time Traffic Speed Data"
 
     # stat_coords()
 
-    extract_speed_colums(baseFilePath, os.listdir(baseFilePath))
+    # extract_speed_colums_daily(baseFilePath, os.listdir(baseFilePath))
+    extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_10.csv',
+                                              'DOT_Traffic_Speeds_NBE_API_2018_11.csv',
+                                              'DOT_Traffic_Speeds_NBE_API_2018_12.csv'])
 
 

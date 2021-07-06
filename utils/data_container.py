@@ -13,10 +13,15 @@ from tqdm import tqdm
 from transform_coord.coord_converter import convert_by_type
 from utils.load_config import get_attribute
 
-longitudeMin = 116.09608
-longitudeMax = 116.71040
-latitudeMin = 39.69086
-latitudeMax = 40.17647
+# longitudeMin = 116.09608
+# longitudeMax = 116.71040
+# latitudeMin = 39.69086
+# latitudeMax = 40.17647
+
+longitudeMin = -74.891
+longitudeMax = -73.72294
+latitudeMin = 40.52419
+latitudeMax = 40.90706
 
 # 坐标转换
 longitudeMin, latitudeMin = convert_by_type(lng=longitudeMin, lat=latitudeMin, type="g2w")
@@ -64,9 +69,10 @@ def collate_fn(batch):
 
 # 填充速度文件
 def fill_speed(speed_data):
-    date_range = pd.date_range(start="2018-08-01", end="2018-11-01", freq="1H")[:-1]
+    date_range = pd.date_range(start="2018-10-01", end="2018-12-31", freq="1H")[:-1]
     speed_data = speed_data.resample(rule="1H").mean()
-    assert date_range[0] in speed_data.index and date_range[-1] in speed_data.index
+    assert date_range[0] in speed_data.index
+    assert date_range[-1] in speed_data.index
     one_week, two_week = datetime.timedelta(days=7), datetime.timedelta(days=14)
     for date in tqdm(date_range, 'Fill speed'):
         if any(speed_data.loc[date].isna()):
@@ -186,7 +192,7 @@ def get_data_loaders(k_order, batch_size):
     # weather_path = "../data/weather.h5"
     weather_path = "../data/weather_test.csv"
     # speed_path = "../data/all_grids_speed.h5"
-    speed_path = "../data/all_grids_speed_test.csv"
+    speed_path = "../data/speed_data/all_grids_speed.csv"
 
     sf_mean, sf_std = np.array(get_attribute('spatial_features_mean')), np.array(get_attribute('spatial_features_std'))
     tf_mean, tf_std = np.array(get_attribute('temporal_features_mean')), np.array(
@@ -203,7 +209,8 @@ def get_data_loaders(k_order, batch_size):
     weather = pd.read_csv(weather_path)
 
     # speed = fill_speed(pd.read_hdf(speed_path))
-    speed = fill_speed(pd.read_csv(speed_path))
+    speed_data = pd.read_csv(speed_path, index_col=0, parse_dates=True)
+    speed = fill_speed(speed_data)
 
     dls = dict()
     for key in ['train', 'validate', 'test']:
@@ -215,7 +222,7 @@ def get_data_loaders(k_order, batch_size):
                                   ef_scaler=(ef_mean, ef_std))
         dls[key] = DataLoader(dataset=dataset,
                               batch_size=batch_size,
-                              shuffle=True,
+                              shuffle=False,
                               drop_last=False,
                               collate_fn=collate_fn,
                               num_workers=16)
