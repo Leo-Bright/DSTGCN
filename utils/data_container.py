@@ -225,7 +225,7 @@ def get_data_loaders(k_order, batch_size):
                               shuffle=False,
                               drop_last=False,
                               collate_fn=collate_fn,
-                              num_workers=16)
+                              num_workers=8)
     return dls
 
 

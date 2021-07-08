@@ -15,10 +15,11 @@ pos_neg_rate = 1
 trainDataPercent = 0.7
 validationDataPercent = 0.1
 
-longitudeMin = 116.09608
-longitudeMax = 116.71040
-latitudeMin = 39.69086
-latitudeMax = 40.17647
+longitudeMin = -74.891
+longitudeMax = -73.72294
+latitudeMin = 40.52419
+latitudeMax = 40.90706
+
 
 # 坐标转换
 longitudeMin, latitudeMin = convert_by_type(lng=longitudeMin, lat=latitudeMin, type="g2w")
@@ -61,7 +62,7 @@ if __name__ == "__main__":
         accident_time = pd.to_datetime(row["endTime"])
         # 不处理不在grids中的事故点
         if not point_is_in_girds(accident_longitude, accident_latitude):
-            # print(f"filter {row}")
+            print(f"filter {row}")
             continue
         # 找到距离事故点最近的node
         distance, node_id = tree_nodes.query([accident_longitude, accident_latitude], k=1)
@@ -71,6 +72,7 @@ if __name__ == "__main__":
         node_info = nodes.loc[node_id]
         # 不处理不在grids中的道路点
         if not point_is_in_girds(node_info['XCoord'], node_info['YCoord']):
+            print(f"node not in grids, node_id {node_id}")
             continue
         # 得到邻居节点,判断是否均在网格中
         near_nodes_id_set = {node_id}
@@ -86,10 +88,12 @@ if __name__ == "__main__":
                 break
         # 若有邻居节点不在网格中,则忽略该点
         if not all_in:
+            print('=====')
             continue
         print(near_nodes_id_set)
         # 判断时间,应该有前24小时的速度
         if accident_time < pd.to_datetime("2018-08-02"):
+            print('accident time earlier than 2018-08-02')
             continue
         accident_dic["longitude"].append(node_info['XCoord'])
         accident_dic["latitude"].append(node_info['YCoord'])

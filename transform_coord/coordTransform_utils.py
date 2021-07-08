@@ -23,8 +23,8 @@ class Geocoding:
                      'key': self.api_key,
                      'city': '全国',
                      'address': address}
-        geocoding = urllib.urlencode(geocoding)
-        ret = urllib.urlopen("%s?%s" % ("http://restapi.amap.com/v3/geocode/geo", geocoding))
+        geocoding = urllib.parse.urlencode(geocoding)
+        ret = urllib.request.urlopen("%s?%s" % ("http://restapi.amap.com/v3/geocode/geo", geocoding))
 
         if ret.getcode() == 200:
             res = ret.read()

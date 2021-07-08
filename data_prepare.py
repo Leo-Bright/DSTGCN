@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import math
 import multiprocessing
+from transform_coord.coord_converter import utm_to_latlng
 
 
 def gen_weather():
@@ -178,6 +179,26 @@ def extract_speed_colums_multi_kernal(baseFilePath, kernel=8):
         process.join()
 
 
+def convert_edgelist_from_utm_to_latlon(input, output):
+
+    lonlat_data = []
+
+    with open(input) as f:
+        utm_csv = csv.reader(f)
+        headers = next(utm_csv)
+        print(headers)
+        lonlat_data.append(headers)
+        for row in utm_csv:
+            (lat, lon) = utm_to_latlng(18, float(row[0]), float(row[1]))
+            row[0] = lon
+            row[1] = lat
+            lonlat_data.append(row)
+
+    with open(output, 'w+', newline='') as f:
+        lonlat_csv = csv.writer(f)
+        lonlat_csv.writerows(lonlat_data)
+
+
 if __name__ == '__main__':
 
     timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
@@ -194,12 +215,15 @@ if __name__ == '__main__':
 
     baseFilePath = "E:/Nicole_bak/Nicole_data/Real-Time Traffic Speed Data"
 
+    convert_edgelist_from_utm_to_latlon('data/NewYork_Edgelist_utm.csv',
+                                        'data/NewYork_Edgelist_latlon.csv')
+
     # stat_coords()
 
     # extract_speed_colums_daily(baseFilePath, os.listdir(baseFilePath))
     # extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_10.csv',
     #                                           ])
 
-    extract_speed_colums_multi_kernal(baseFilePath, 4)
+    # extract_speed_colums_multi_kernal(baseFilePath, 4)
 
 
