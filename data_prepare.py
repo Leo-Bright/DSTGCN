@@ -199,6 +199,33 @@ def convert_edgelist_from_utm_to_latlon(input, output):
         lonlat_csv.writerows(lonlat_data)
 
 
+def gen_edge_h5(input, output):
+    
+    # edgelist_csv = csv.reader(open(input))
+    # edge_h5_csv = edge_h5_csv = csv.writer(open(output, 'w+', newline=''))
+    # headers = next(edgelist_csv)
+    new_headers = ['XCoord', 'YCoord', 'LENGTH', 'NUM_NODE', 'spatial_features']
+    #
+    # already_read = set()
+    # for row in edgelist_csv:
+    #     new_row = []
+    #     node = row[2]
+    #     already_read.add(node)
+    #     new_row.append(row[0])
+    #     new_row.append(row[1])
+
+    data = pd.read_csv(input, header=0)
+    edges_as_nodes = data.groupby('EDGE').agg({'XCoord': 'mean',
+                                               'YCoord': 'mean',
+                                               'START_NODE': 'nunique',
+                                               'END_NODE': 'nunique',
+                                               'LENGTH': 'mean'})
+    edges_as_nodes['NUM_NODE'] = edges_as_nodes['START_NODE']
+    edges_as_nodes['spatial_features'] = ''
+    edges_as_nodes.drop(['START_NODE', 'END_NODE'], axis=1, inplace=True)
+    edges_as_nodes.to_csv(output, index=False, columns=new_headers)
+
+
 if __name__ == '__main__':
 
     timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
@@ -215,8 +242,8 @@ if __name__ == '__main__':
 
     baseFilePath = "E:/Nicole_bak/Nicole_data/Real-Time Traffic Speed Data"
 
-    convert_edgelist_from_utm_to_latlon('data/NewYork_Edgelist_utm.csv',
-                                        'data/NewYork_Edgelist_latlon.csv')
+    # convert_edgelist_from_utm_to_latlon('data/NewYork_Edgelist_utm.csv',
+    #                                     'data/NewYork_Edgelist_test.csv')
 
     # stat_coords()
 
@@ -227,3 +254,5 @@ if __name__ == '__main__':
     # extract_speed_colums_multi_kernal(baseFilePath, 4)
 
 
+    gen_edge_h5('data/NewYork_Edgelist_test.csv',
+                'data/edges_data_test.h5')
