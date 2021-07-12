@@ -5,7 +5,10 @@ import os
 import pandas as pd
 import math
 import multiprocessing
+import copy
+from tqdm import tqdm
 from transform_coord.coord_converter import utm_to_latlng
+from math import radians, cos, sin, asin, sqrt
 
 
 def gen_weather():
@@ -199,30 +202,85 @@ def convert_edgelist_from_utm_to_latlon(input, output):
         lonlat_csv.writerows(lonlat_data)
 
 
-def gen_edge_h5(input, output):
-    
-    # edgelist_csv = csv.reader(open(input))
-    # edge_h5_csv = edge_h5_csv = csv.writer(open(output, 'w+', newline=''))
-    # headers = next(edgelist_csv)
-    new_headers = ['XCoord', 'YCoord', 'LENGTH', 'NUM_NODE', 'spatial_features']
-    #
-    # already_read = set()
-    # for row in edgelist_csv:
-    #     new_row = []
-    #     node = row[2]
-    #     already_read.add(node)
-    #     new_row.append(row[0])
-    #     new_row.append(row[1])
+def get_index_from_list(array, start, end, lat):
+    mid_index = (end - start)//2 + start
+    if start <= end:
+        if array[mid_index][1][1] < lat:
+            return get_index_from_list(array, mid_index+1, end, lat)
+        elif array[mid_index][1][1] > lat:
+            return get_index_from_list(array, start, mid_index-1, lat)
+        else:
+            return mid_index
+    else:
+        return end if end > 0 else start
 
-    data = pd.read_csv(input, header=0)
-    edges_as_nodes = data.groupby('EDGE').agg({'XCoord': 'mean',
+
+def get_nodes_from_list(array, lat):
+    acc = 0.002
+    start = get_index_from_list(array, 0, len(array) - 1, lat - acc)
+    end = get_index_from_list(array, 0, len(array) - 1, lat + acc)
+    return array[start:end]
+
+
+def get_distance(lng1, lat1, lng2, lat2):
+    lng1, lat1, lng2, lat2 = map(radians, [lng1, lat1, lng2, lat2])
+    dlon = lng2-lng1
+    dlat = lat2-lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    dis = 2*asin(sqrt(a))*6371*1000
+    return dis
+
+
+def gen_edge_h5(input_edgelist, input_pois, output):
+
+    all_edges_pois = []
+
+    poi_coordinate = []
+    poi_data = pd.read_csv(input_pois, header=0)
+    for index, row in poi_data.iterrows():
+        lon = row['longitude']
+        lat = row['latitude']
+        poi_type = row['poi_type']
+        coordinate = [float(lon), float(lat)]
+        poi_coordinate.append((poi_type, coordinate))
+
+    poi_coordinate_lat = copy.copy(poi_coordinate)
+    poi_coordinate_lat.sort(key=lambda ele: ele[1][1])
+
+    
+
+    new_headers = ['XCoord', 'YCoord', 'LENGTH', 'NUM_NODE', 'spatial_features']
+
+    edges_data = pd.read_csv(input_edgelist, header=0)
+    edges_as_nodes = edges_data.groupby('EDGE').agg({'XCoord': 'mean',
                                                'YCoord': 'mean',
                                                'START_NODE': 'nunique',
                                                'END_NODE': 'nunique',
                                                'LENGTH': 'mean'})
     edges_as_nodes['NUM_NODE'] = edges_as_nodes['START_NODE']
-    edges_as_nodes['spatial_features'] = ''
     edges_as_nodes.drop(['START_NODE', 'END_NODE'], axis=1, inplace=True)
+
+
+    edges_coordinate = []
+    for index, row in tqdm(edges_as_nodes.iterrows(), 'Processing edges coords'):
+        lon = row['XCoord']
+        lat = row['YCoord']
+        _coordinate = (float(lon), float(lat))
+        edges_coordinate.append(_coordinate)
+
+    print("processing pois:")
+    for _coords in tqdm(edges_coordinate, 'Processing edges pois'):
+        _edge_pois = [0 for i in range(22)]
+        (_lon, _lat) = _coords
+        _pois = get_nodes_from_list(poi_coordinate_lat, _lat)
+        for _poi in _pois:
+            (poi_lon, poi_lat) = _poi[1]
+            if abs(poi_lon - _lon) <= 0.002:
+                poi_type = int(_poi[0])
+                _edge_pois[poi_type-1] += 1
+        all_edges_pois.append(_edge_pois)
+
+    edges_as_nodes['spatial_features'] = all_edges_pois
     edges_as_nodes.to_csv(output, index=False, columns=new_headers)
 
 
@@ -254,5 +312,6 @@ if __name__ == '__main__':
     # extract_speed_colums_multi_kernal(baseFilePath, 4)
 
 
-    gen_edge_h5('data/NewYork_Edgelist_test.csv',
-                'data/edges_data_test.h5')
+    gen_edge_h5('data/NewYork_Edgelist_latlon.csv',
+                'data/poi.csv',
+                'data/edges_data.h5')

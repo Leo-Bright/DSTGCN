@@ -64,6 +64,18 @@ def process_pois(input, output):
     print(output, " writes successfully.")
 
 
+def stat_poi_types(input_poi):
+
+    type_set = set()
+    cleaned_pois = pd.read_csv(input_poi, header=0)
+    for index, row in cleaned_pois.iterrows():
+        type = row['poi_type']
+        type_set.add(type)
+    print(type_set)
+    print(len(type_set))
+
+
+
 if __name__ == "__main__":
     # POIFilePath = "/home/yule/文档/POI data/poi_analyse.csv"
     # outRoadsPOIPath = "/home/yule/桌面/traffic_accident_data/poi.csv"
@@ -71,6 +83,8 @@ if __name__ == "__main__":
 
     poi_file_path = 'E:/Nicole_bak/Nicole_data/POI NYC/Point_Of_Interest.csv'
 
-    cleaned_poi_file_path = '../data/poi_test.csv'
+    cleaned_poi_file_path = '../data/poi.csv'
 
-    process_pois(poi_file_path, cleaned_poi_file_path)
+    # process_pois(poi_file_path, cleaned_poi_file_path)
+
+    stat_poi_types(cleaned_poi_file_path)
