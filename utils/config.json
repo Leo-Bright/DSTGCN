@@ -12,7 +12,7 @@
 
   "train_repeat_times": 3,
   "epochs": 150,
-  "cuda": 1,
+  "cuda": -1,
 
   "temporal_features_number": 1,
   "weather_features_number": 38,
