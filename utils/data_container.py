@@ -150,8 +150,6 @@ class AccidentDataset(Dataset):
         # get external_features (weather + calendar)
         # 天气使用预测的前一时刻近似, 时间点信息有月,日,周几,时间点,是否为周末
         _dr = date_range[-1]
-        print(_dr)
-        print(type(_dr))
         weather = self.weather.loc[_dr].tolist()
         external_features = weather + [accident_time.month, accident_time.day, accident_time.dayofweek,
                                        accident_time.hour, int(accident_time.dayofweek >= 5)]
