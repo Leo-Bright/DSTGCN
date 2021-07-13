@@ -1,5 +1,6 @@
 import datetime
 import math
+import json
 from typing import Tuple
 
 import dgl
@@ -144,23 +145,28 @@ class AccidentDataset(Dataset):
         x_ids = np.floor((selected_nodes['XCoord'].values - longitudeMin) / widthSingle).astype(np.int)
         y_ids = np.floor((selected_nodes['YCoord'].values - latitudeMin) / heightSingle).astype(np.int)
 
-        temporal_features = selected_time[map(lambda ids: f'{ids[0]},{ids[1]}', zip(y_ids, x_ids))].values.transpose()
+        temporal_features = selected_time[list(map(lambda ids: f'{ids[0]},{ids[1]}', zip(y_ids, x_ids)))].values.transpose()
 
         # get external_features (weather + calendar)
         # 天气使用预测的前一时刻近似, 时间点信息有月,日,周几,时间点,是否为周末
-        weather = self.weather.loc[date_range[-1]].tolist()
+        _dr = date_range[-1]
+        print(_dr)
+        print(type(_dr))
+        weather = self.weather.loc[_dr].tolist()
         external_features = weather + [accident_time.month, accident_time.day, accident_time.dayofweek,
                                        accident_time.hour, int(accident_time.dayofweek >= 5)]
 
         if self.sf_scaler is not None:
             mean, std = self.sf_scaler
-            spatial_features = (np.array(spatial_features) - mean) / std
+            _sf = np.array(spatial_features)
+            spatial_features = (_sf - mean) / std
         if self.tf_scaler is not None:
             mean, std = self.tf_scaler
             temporal_features = (np.array(temporal_features) - mean) / std
         if self.ef_scaler is not None:
             mean, std = self.ef_scaler
-            external_features = (np.array(external_features) - mean) / std
+            _ef = np.array(external_features)
+            external_features = (_ef - mean) / std
 
         # [N, F_1]
         spatial_features = torch.tensor(spatial_features).float()
@@ -174,7 +180,7 @@ class AccidentDataset(Dataset):
         return g, spatial_features, temporal_features, external_features, target
 
     def __len__(self):
-        return len(self.accident)
+        return len(self.accident) - 1
 
 
 def get_data_loaders(k_order, batch_size):
@@ -186,11 +192,11 @@ def get_data_loaders(k_order, batch_size):
     Returns:
         data_loader: DataLoader
     """
-    network_path = r'../data/newyork_roadnet_test.gpickle'
-    node_attr_path = r'../data/edges_data_test.h5'
+    network_path = r'../data/newyork_roadnet.gpickle'
+    node_attr_path = r'../data/edges_data.h5'
     accident_path = r'../data/accident_10.h5'
     # weather_path = "../data/weather.h5"
-    weather_path = "../data/weather_test.csv"
+    weather_path = "../data/weather.csv"
     # speed_path = "../data/all_grids_speed.h5"
     speed_path = "../data/speed_data/all_grids_speed.csv"
 
@@ -204,9 +210,13 @@ def get_data_loaders(k_order, batch_size):
     # XCoord  YCoord LENGTH  NUM_NODE
     # nodes = pd.read_hdf(node_attr_path)
     nodes = pd.read_csv(node_attr_path)
+    nodes['spatial_features'] = nodes.apply(lambda x: json.loads(x['spatial_features']), axis=1)
+    # nodes.drop('spatial_features')
+    # nodes['spatial_features'] = nodes['spatial_features_tmp']
+    # nodes.drop('spatial_features_tmp')
     # 'valid_time', 'temp', 'dewPt', 'rh', 'pressure', 'wspd', 'feels_like',  ......
     # weather = pd.read_hdf(weather_path)
-    weather = pd.read_csv(weather_path)
+    weather = pd.read_csv(weather_path, index_col=0, parse_dates=True)
 
     # speed = fill_speed(pd.read_hdf(speed_path))
     speed_data = pd.read_csv(speed_path, index_col=0, parse_dates=True)
@@ -225,7 +235,7 @@ def get_data_loaders(k_order, batch_size):
                               shuffle=False,
                               drop_last=False,
                               collate_fn=collate_fn,
-                              num_workers=8)
+                              num_workers=0)
     return dls
 
 

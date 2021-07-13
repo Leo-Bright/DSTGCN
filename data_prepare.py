@@ -9,33 +9,93 @@ import copy
 from tqdm import tqdm
 from transform_coord.coord_converter import utm_to_latlng
 from math import radians, cos, sin, asin, sqrt
+from datetime import datetime
 
 
 def gen_weather():
+
     date_format = '%Y-%m-%d%I:%M %p'
     new_date_format = '%Y/%m/%d %H:%M:%S'
     new_obs_data = []
 
+    tr_set = set()
+
     with open('data/observation.csv') as f:
         obs_csv = csv.reader(f)
         headers = next(obs_csv)
-        new_headers = ['temp', 'dewPt', 'rh', 'wdir_cardinal', 'wspd', 'pressure', 'wx_phrase',
-                                               'valid_time', 'feels_like']
+        new_headers = ['temp', 'dewPt', 'rh']
+        # new_headers = ['temp', 'dewPt', 'rh', 'wdir_cardinal', 'wspd', 'pressure', 'wx_phrase', 'feels_like']
+        for i in range(18):
+            new_headers.append('wdir_cardinal' + str(i))
+        new_headers.append('wspd')
+        new_headers.append('pressure')
+        for i in range(14):
+            new_headers.append('wx_phrase' + str(i))
+        new_headers.append('feels_like')
         new_obs_data.append(new_headers)
-        for row in obs_csv:
-            new_row = row[2:6]
-            new_row.append(row[8])
-            new_row.append(row[7])
+        for row in tqdm(obs_csv):
+            new_row = []
+            # temp
+            try:
+                new_row.append(float(row[2][:2]))
+            except:
+                new_row.append(float(row[2][:1]))
+            # dew_point
+            try:
+                new_row.append(float(row[3][:2]))
+            except:
+                new_row.append(float(row[3][:1]))
+            # humidity
+            new_row.append(float(row[4].split(' ')[0]))
+            # wind direction
+            for i in range(18):
+                new_row.append(0.0)
+            # wind_speed
+            new_row.append(row[6].split(' ')[0])
+            # pressure
+            new_row.append(float(row[8].split(' ')[0]))
+            # wind type
+            for i in range(14):
+                new_row.append(0.0)
+            # feels like
+            try:
+                new_row.append(float(row[2][:2]))
+            except :
+                new_row.append(float(row[2][:1]))
+
             date_time = row[0] + row[1]
             date_tuple = time.strptime(date_time, date_format)
-            new_date_time = time.strftime(new_date_format, date_tuple)
-            new_row.append(new_date_time)
-            new_row.append(row[2])
+            year, month, day, hour = date_tuple[:4]
+            if year != 2018:
+                continue
+            if month < 9:
+                continue
+            # new_date_time = time.strftime(new_date_format, date_tuple)
+            _dt = datetime(year, month, day, hour)
+            new_date_time = _dt.strftime(new_date_format)
+            if new_date_time in tr_set:
+                continue
+            tr_set.add(new_date_time)
+            # new_row.append(new_date_time)
             new_obs_data.append(new_row)
 
-    with open('data/weather_test.csv', 'w+', newline='') as f:
+    time_range = pd.date_range('2018-09-01', '2018-12-31', freq="1H")
+
+    for _tr in time_range:
+        _dt = datetime.strptime(str(_tr), '%Y-%m-%d %H:%M:%S')
+        new_dt = _dt.strftime(new_date_format)
+        if new_dt not in tr_set:
+            print(new_dt)
+
+    with open('data/weather_no_index.csv', 'w+', newline='') as f:
         weather_csv = csv.writer(f)
         weather_csv.writerows(new_obs_data)
+
+    df_weather = pd.read_csv('data/weather_no_index.csv', header=0)
+    time_range = pd.date_range('2018-09-01 00:00:00', '2018-12-31 23:00:00', freq="1H")
+    df_weather.insert(0, 'index', time_range)
+    df_weather.set_index('index', inplace=True)
+    df_weather.to_csv('data/weather.csv')
 
 
 def stat_coords():
@@ -286,7 +346,12 @@ def gen_edge_h5(input_edgelist, input_pois, output):
 
 if __name__ == '__main__':
 
-    timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
+    gen_weather()
+
+    # timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
+    #
+    # for tr in timeRange:
+    #     print(tr)
 
     # with open('data/speed_data/all_grids_speed.csv') as f:
     #     speed = csv.reader(f)
@@ -295,10 +360,7 @@ if __name__ == '__main__':
     #     print(headers)
     #     print(row1)
 
-    for eathTime in timeRange:
-        print(eathTime)
-
-    baseFilePath = "E:/Nicole_bak/Nicole_data/Real-Time Traffic Speed Data"
+    baseFilePath = "E:/Nicole_data/Real-Time Traffic Speed Data"
 
     # convert_edgelist_from_utm_to_latlon('data/NewYork_Edgelist_utm.csv',
     #                                     'data/NewYork_Edgelist_test.csv')
@@ -306,12 +368,12 @@ if __name__ == '__main__':
     # stat_coords()
 
     # extract_speed_colums_daily(baseFilePath, os.listdir(baseFilePath))
-    # extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_10.csv',
+    # extract_speed_colums_daily(baseFilePath, ['DOT_Traffic_Speeds_NBE_API_2018_9.csv',
     #                                           ])
 
     # extract_speed_colums_multi_kernal(baseFilePath, 4)
 
 
-    gen_edge_h5('data/NewYork_Edgelist_latlon.csv',
-                'data/poi.csv',
-                'data/edges_data.h5')
+    # gen_edge_h5('data/NewYork_Edgelist_latlon.csv',
+    #             'data/poi.csv',
+    #             'data/edges_data.h5')

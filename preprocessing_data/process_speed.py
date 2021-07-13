@@ -432,6 +432,7 @@ if __name__ == "__main__":
     # readTXTFiles(baseFilePath)
 
     # getGridTaxiSpeed(baseFilePath, os.listdir(baseFilePath))
+    # getGridTaxiSpeed(baseFilePath, ['2018-09-29', '2018-09-30'])
     # getGridTaxiSpeedMultiKernel(baseFilePath, 6)
 
     # getGridPoints()
