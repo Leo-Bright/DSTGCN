@@ -240,54 +240,17 @@ def get_data_loaders(k_order, batch_size):
 if __name__ == "__main__":
     dls = get_data_loaders(get_attribute("K_hop"), get_attribute('batch_size'))
     for key in ["train", "validate", "test"]:
+        if key == 'train':
+            continue
         first = True
         exception = False
         sf = []
         tf = []
         ef = []
         for step, (g, spatial_features, temporal_features, external_features, y) in tqdm(enumerate(dls[key])):
-            _sf = list(spatial_features.size())
-            _tf = list(temporal_features.size())
-            _ef = list(external_features.size())
-            try:
-                assert _sf[1] == 22
-                assert _tf[1] == 1
-                assert _tf[2] == 24
-                assert _ef[1] == 43
-            except:
-                print('==========')
-                print(_sf)
-                print(spatial_features)
-                print('==========')
-                print(_tf)
-                print(temporal_features)
-                print('==========')
-                print(_ef)
-                print(external_features)
-                print('==========')
 
-            # if first:
-            #     sf = _sf
-            #     tf = _tf
-            #     ef = _ef
-            #     first = False
-            # for idx, e in sf:
-            #     if _sf[idx] != e:
-            #         exception = True
-            #         print('sf:', sf)
-            #         print('_sf:', _sf)
-            #
-            # for idx, e in tf:
-            #     if _tf[idx] != e:
-            #         exception = True
-            #         print('tf:', tf)
-            #         print('_tf:', _tf)
-            #
-            # for idx, e in ef:
-            #     if _ef[idx] != e:
-            #         exception = True
-            #         print('ef:', ef)
-            #         print('_ef:', _ef)
+            if step < 163:
+                continue
 
             # input_data, truth_data
             # if step == 0:

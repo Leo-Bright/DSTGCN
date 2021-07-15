@@ -54,7 +54,9 @@ def train_model(model: nn.Module,
                 tqdm_loader = tqdm(enumerate(data_loaders[phase]))
                 for step, (g, spatial_features, temporal_features, external_features, truth_data) in tqdm_loader:
 
-                    if step < 160:
+                    if step < 163:
+                        continue
+                    if external_features.shape()[0] != get_attribute("batch_size"):
                         continue
 
                     if not get_attribute("use_spatial_features"):
@@ -68,20 +70,9 @@ def train_model(model: nn.Module,
                         [spatial_features, temporal_features, external_features], truth_data)
 
                     with torch.set_grad_enabled(phase == 'train'):
-                        outputs = model(g, *features)
-                        outputs = torch.squeeze(outputs)  # squeeze [batch-size, 1] to [batch-size]
-                        try:
-                            loss = loss_func(truth=truth_data, predict=outputs)
-                        except:
-                            print('=======loss=======')
-                            print(truth_data)
-                            print('=======loss=======')
-                            print(list(truth_data.size()))
-                            print('=======loss=======')
-                            print(outputs)
-                            print('=======loss=======')
-                            print(list(outputs.size()))
-                            print('=======loss=======')
+                        _outputs = model(g, *features)
+                        outputs = torch.squeeze(_outputs)  # squeeze [batch-size, 1] to [batch-size]
+                        loss = loss_func(truth=truth_data, predict=outputs)
                         if phase == 'train':
                             optimizer.zero_grad()
                             loss.backward()
@@ -101,22 +92,9 @@ def train_model(model: nn.Module,
                     torch.cuda.empty_cache()
 
                 print(f'{phase} metric ...')
-                try:
-                    _cp = np.concatenate(predictions)
-                    _ct = np.concatenate(targets)
-                    scores = evaluate(_cp, _ct)
-                except:
-                    print('======scores========')
-                    print('======predictions========')
-                    print(predictions)
-                    for idx, pred in enumerate(predictions):
-                        print(str(idx), pred.size())
-                    print('======targets========')
-                    print(targets)
-                    for idx, targ in enumerate(targets):
-                        print(str(idx), targ.size())
-                    print('======scores========')
-                    exit(0)
+                _cp = np.concatenate(predictions)
+                _ct = np.concatenate(targets)
+                scores = evaluate(_cp, _ct)
                 running_metrics[phase] = scores
                 print(scores)
 
@@ -142,16 +120,6 @@ def train_model(model: nn.Module,
                 f'{phase} loss': running_loss[phase] / len(data_loaders[phase].dataset) for phase in phases},
                                global_step=epoch)
     finally:
-        print('======scores========')
-        print('======predictions========')
-        print(predictions)
-        for idx, pred in enumerate(predictions):
-            print(str(idx), pred.size())
-        print('======targets========')
-        print(targets)
-        for idx, targ in enumerate(targets):
-            print(str(idx), targ.size())
-        print('======scores========')
 
         time_elapsed = time.perf_counter() - since
         print(f"cost {time_elapsed} seconds")
