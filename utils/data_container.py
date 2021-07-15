@@ -192,11 +192,11 @@ def get_data_loaders(k_order, batch_size):
     """
     network_path = r'../data/newyork_roadnet.gpickle'
     node_attr_path = r'../data/edges_data.h5'
-    accident_path = r'../data/accident_10.h5'
+    accident_path = r'../data/accident_10_201810_201812.h5'
     # weather_path = "../data/weather.h5"
     weather_path = "../data/weather.csv"
     # speed_path = "../data/all_grids_speed.h5"
-    speed_path = "../data/speed_data/all_grids_speed.csv"
+    speed_path = "../data/speed_data/all_grids_speed_201810_201812.csv"
 
     sf_mean, sf_std = np.array(get_attribute('spatial_features_mean')), np.array(get_attribute('spatial_features_std'))
     tf_mean, tf_std = np.array(get_attribute('temporal_features_mean')), np.array(

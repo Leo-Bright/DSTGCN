@@ -63,9 +63,18 @@ def train_model(model: nn.Module,
                     with torch.set_grad_enabled(phase == 'train'):
                         outputs = model(g, *features)
                         outputs = torch.squeeze(outputs)  # squeeze [batch-size, 1] to [batch-size]
-
-                        loss = loss_func(truth=truth_data, predict=outputs)
-
+                        try:
+                            loss = loss_func(truth=truth_data, predict=outputs)
+                        except:
+                            print('==============')
+                            print(truth_data)
+                            print('==============')
+                            print(list(truth_data.size()))
+                            print('==============')
+                            print(outputs)
+                            print('==============')
+                            print(list(outputs.size()))
+                            print('========')
                         if phase == 'train':
                             optimizer.zero_grad()
                             loss.backward()
