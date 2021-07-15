@@ -26,7 +26,7 @@ def train_model(model: nn.Module,
     writer = SummaryWriter(tensorboard_folder)
     num_epochs = get_attribute('epochs')
 
-    since = time.clock()
+    since = time.perf_counter()
 
     model = convert_to_gpu(model)
     loss_func = convert_to_gpu(loss_func)
@@ -111,7 +111,7 @@ def train_model(model: nn.Module,
                 f'{phase} loss': running_loss[phase] / len(data_loaders[phase].dataset) for phase in phases},
                                global_step=epoch)
     finally:
-        time_elapsed = time.clock() - since
+        time_elapsed = time.perf_counter() - since
         print(f"cost {time_elapsed} seconds")
 
         save_model(f"{model_folder}/best_model.pkl", **save_dict)
