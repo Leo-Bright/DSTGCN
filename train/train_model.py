@@ -22,7 +22,6 @@ def train_model(model: nn.Module,
                 model_folder: str,
                 tensorboard_folder: str):
 
-    of = open('output.txt', 'w+')
     phases = ['train', 'validate', 'test']
 
     writer = SummaryWriter(tensorboard_folder)
@@ -44,6 +43,9 @@ def train_model(model: nn.Module,
             save_validate_this_epoch = False
             for phase in phases:
                 if phase == 'train':
+
+                    continue
+
                     model.train()
                 else:
                     model.eval()
@@ -51,6 +53,9 @@ def train_model(model: nn.Module,
                 steps, predictions, targets = 0, list(), list()
                 tqdm_loader = tqdm(enumerate(data_loaders[phase]))
                 for step, (g, spatial_features, temporal_features, external_features, truth_data) in tqdm_loader:
+
+                    if step < 160:
+                        continue
 
                     if not get_attribute("use_spatial_features"):
                         torch.zero_(spatial_features)
@@ -68,19 +73,15 @@ def train_model(model: nn.Module,
                         try:
                             loss = loss_func(truth=truth_data, predict=outputs)
                         except:
-                            of.write('=====loss=========')
-                            print('==============')
+                            print('=======loss=======')
                             print(truth_data)
-                            print('==============')
-                            of.write(str(list(truth_data.size())))
+                            print('=======loss=======')
                             print(list(truth_data.size()))
-                            print('==============')
+                            print('=======loss=======')
                             print(outputs)
-                            print('==============')
-                            of.write(str(list(outputs.size())))
+                            print('=======loss=======')
                             print(list(outputs.size()))
-                            of.write('==============')
-                            print('========')
+                            print('=======loss=======')
                         if phase == 'train':
                             optimizer.zero_grad()
                             loss.backward()
@@ -105,19 +106,16 @@ def train_model(model: nn.Module,
                     _ct = np.concatenate(targets)
                     scores = evaluate(_cp, _ct)
                 except:
-                    of.write('=====scores=======')
-                    print('==============')
+                    print('======scores========')
+                    print('======predictions========')
                     print(predictions)
-                    print('==============')
-                    of.write(str(list(predictions.size())))
-                    print(list(predictions.size()))
-                    print('==============')
+                    for idx, pred in enumerate(predictions):
+                        print(str(idx), pred.size())
+                    print('======targets========')
                     print(targets)
-                    print('==============')
-                    of.write(str(list(targets.size())))
-                    print(list(targets.size()))
-                    print('========')
-                    of.write('=====scores=======')
+                    for idx, targ in enumerate(targets):
+                        print(str(idx), targ.size())
+                    print('======scores========')
                 running_metrics[phase] = scores
                 print(scores)
 
@@ -145,7 +143,6 @@ def train_model(model: nn.Module,
     finally:
         time_elapsed = time.perf_counter() - since
         print(f"cost {time_elapsed} seconds")
-        of.close()
 
         save_model(f"{model_folder}/best_model.pkl", **save_dict)
 
