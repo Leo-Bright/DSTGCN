@@ -82,7 +82,7 @@ def train_model(model: nn.Module,
 
                     targets.append(truth_data.cpu().numpy())
                     with torch.no_grad():
-                        predictions.append(outputs.cpu().numpy())
+                        predictions.append(outputs.cpu().detach().numpy())
 
                     running_loss[phase] += loss * truth_data.size(0)
                     steps += truth_data.size(0)
