@@ -101,7 +101,9 @@ def train_model(model: nn.Module,
 
                 print(f'{phase} metric ...')
                 try:
-                    scores = evaluate(np.concatenate(predictions), np.concatenate(targets))
+                    _cp = np.concatenate(predictions)
+                    _ct = np.concatenate(targets)
+                    scores = evaluate(_cp, _ct)
                 except:
                     of.write('=====scores=======')
                     print('==============')
