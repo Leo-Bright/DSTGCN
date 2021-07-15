@@ -116,6 +116,7 @@ def train_model(model: nn.Module,
                     for idx, targ in enumerate(targets):
                         print(str(idx), targ.size())
                     print('======scores========')
+                    exit(0)
                 running_metrics[phase] = scores
                 print(scores)
 
@@ -141,6 +142,17 @@ def train_model(model: nn.Module,
                 f'{phase} loss': running_loss[phase] / len(data_loaders[phase].dataset) for phase in phases},
                                global_step=epoch)
     finally:
+        print('======scores========')
+        print('======predictions========')
+        print(predictions)
+        for idx, pred in enumerate(predictions):
+            print(str(idx), pred.size())
+        print('======targets========')
+        print(targets)
+        for idx, targ in enumerate(targets):
+            print(str(idx), targ.size())
+        print('======scores========')
+
         time_elapsed = time.perf_counter() - since
         print(f"cost {time_elapsed} seconds")
 
