@@ -122,7 +122,10 @@ class DSTGCN(nn.Module):
             # remove external embedding layer
             e_out = external_features
 
-        nums_nodes, id = bg.batch_num_nodes(), 0
+        try:
+            nums_nodes, id = bg.batch_num_nodes(), 0
+        except:
+            nums_nodes, id = bg.batch_num_nodes, 0
         s_features, t_features = list(), list()
         for num_nodes in nums_nodes:
             s_features.append(s_out[id])
