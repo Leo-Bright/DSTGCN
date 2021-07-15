@@ -250,12 +250,9 @@ if __name__ == "__main__":
             _tf = list(temporal_features.size())
             _ef = list(external_features.size())
             try:
-                assert _sf[0] == 26617
                 assert _sf[1] == 22
-                assert _tf[0] == 26617
                 assert _tf[1] == 1
                 assert _tf[2] == 24
-                assert _ef[0] == 64
                 assert _ef[1] == 43
             except:
                 print('==========')

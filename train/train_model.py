@@ -21,6 +21,8 @@ def train_model(model: nn.Module,
                 optimizer,
                 model_folder: str,
                 tensorboard_folder: str):
+
+    of = open('output.txt', 'w+')
     phases = ['train', 'validate', 'test']
 
     writer = SummaryWriter(tensorboard_folder)
@@ -66,14 +68,18 @@ def train_model(model: nn.Module,
                         try:
                             loss = loss_func(truth=truth_data, predict=outputs)
                         except:
+                            of.write('=====loss=========')
                             print('==============')
                             print(truth_data)
                             print('==============')
+                            of.write(str(list(truth_data.size())))
                             print(list(truth_data.size()))
                             print('==============')
                             print(outputs)
                             print('==============')
+                            of.write(str(list(outputs.size())))
                             print(list(outputs.size()))
+                            of.write('==============')
                             print('========')
                         if phase == 'train':
                             optimizer.zero_grad()
@@ -97,15 +103,19 @@ def train_model(model: nn.Module,
                 try:
                     scores = evaluate(np.concatenate(predictions), np.concatenate(targets))
                 except:
+                    of.write('=====scores=======')
                     print('==============')
                     print(predictions)
                     print('==============')
+                    of.write(str(list(predictions.size())))
                     print(list(predictions.size()))
                     print('==============')
                     print(targets)
                     print('==============')
+                    of.write(str(list(targets.size())))
                     print(list(targets.size()))
                     print('========')
+                    of.write('=====scores=======')
                 running_metrics[phase] = scores
                 print(scores)
 
@@ -133,6 +143,7 @@ def train_model(model: nn.Module,
     finally:
         time_elapsed = time.perf_counter() - since
         print(f"cost {time_elapsed} seconds")
+        of.close()
 
         save_model(f"{model_folder}/best_model.pkl", **save_dict)
 
