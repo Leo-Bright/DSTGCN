@@ -94,7 +94,18 @@ def train_model(model: nn.Module,
                     torch.cuda.empty_cache()
 
                 print(f'{phase} metric ...')
-                scores = evaluate(np.concatenate(predictions), np.concatenate(targets))
+                try:
+                    scores = evaluate(np.concatenate(predictions), np.concatenate(targets))
+                except:
+                    print('==============')
+                    print(predictions)
+                    print('==============')
+                    print(list(predictions.size()))
+                    print('==============')
+                    print(targets)
+                    print('==============')
+                    print(list(targets.size()))
+                    print('========')
                 running_metrics[phase] = scores
                 print(scores)
 
