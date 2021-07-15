@@ -54,9 +54,11 @@ def train_model(model: nn.Module,
                 tqdm_loader = tqdm(enumerate(data_loaders[phase]))
                 for step, (g, spatial_features, temporal_features, external_features, truth_data) in tqdm_loader:
 
+                    print()
+
                     if step < 163:
                         continue
-                    if external_features.shape()[0] != get_attribute("batch_size"):
+                    if list(external_features.size())[0] != get_attribute("batch_size"):
                         continue
 
                     if not get_attribute("use_spatial_features"):
