@@ -374,6 +374,7 @@ def merge_all_grids_speed(baseFilePath):
 
     all_grids_speed_dataframe = pd.DataFrame()
     dailyFilePathList = os.listdir(baseFilePath)
+    dailyFilePathList = ['2018-09-29', '2018-09-30', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04', '2018-10-05']
     # 查找每天文件夹下的girdsSpeed.csv文件
     count = 0
     for dailyFilePath in tqdm(dailyFilePathList):
