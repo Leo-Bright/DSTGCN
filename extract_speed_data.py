@@ -6,14 +6,11 @@ divideBound = 5
 file_count = 0
 floatBitNumber = 8
 
-# longitudeMin = 116.09608
-# longitudeMax = 116.71040
-# latitudeMin = 39.69086
-# latitudeMax = 40.17647
 longitudeMin = -74.891
 longitudeMax = -73.72294
 latitudeMin = 40.52419
 latitudeMax = 40.90706
+
 # 网格的划分
 widthSingle = 0.01 / math.cos(latitudeMin / 180 * math.pi) / divideBound
 width = math.floor((longitudeMax - longitudeMin) / widthSingle)
@@ -39,15 +36,24 @@ def extract_speed_from_segments(segments_file_path, nodes_file_path):
             continue
         source = segment[2]
         target = segment[3]
-        source_lon_lat = all_nodes_dict.get(source, default=None)
-        target_lon_lat = all_nodes_dict.get(target, default=None)
-        if source_lon_lat is None and target_lon_lat is None:
+        source_lon_lat_info = all_nodes_dict.get(source, default=None)
+        target_lon_lat_info = all_nodes_dict.get(target, default=source_lon_lat_info)
+        if target_lon_lat_info is None:
             continue
-        elif:
+        if source_lon_lat_info is None:
+            source_lon_lat_info = target_lon_lat_info
 
+        source_lon = source_lon_lat_info[-1][0]
+        source_lat = source_lon_lat_info[-1][1]
 
-widthIndex = math.floor((row["longitude"] - longitudeMin) / widthSingle)
-heightIndex = math.floor((row["latitude"] - latitudeMin) / heightSingle)
+        target_lon = target_lon_lat_info[-1][0]
+        target_lat = target_lon_lat_info[-1][1]
+
+        segment_lon = float(source_lon) + float(target_lon) / 2
+        segment_lat = float(source_lat) + float(target_lat) / 2
+
+        width_index = math.floor((row["longitude"] - longitudeMin) / widthSingle)
+        height_index = math.floor((row["latitude"] - latitudeMin) / heightSingle)
 
 if __name__ == '__main__':
 

@@ -25,7 +25,7 @@ latitudeMax = 40.90706
 longitudeMin, latitudeMin = convert_by_type(lng=longitudeMin, lat=latitudeMin, type="g2w")
 longitudeMax, latitudeMax = convert_by_type(lng=longitudeMax, lat=latitudeMax, type="g2w")
 
-accident_path = "../data/accidents_201810_201812.csv"
+accident_path = "../data/accidents_20160101_20161231s.csv"
 accident_data = pd.read_csv(accident_path, header=0)
 
 edges_path = "../data/edges_data.h5"
@@ -92,8 +92,8 @@ if __name__ == "__main__":
             continue
         print(near_nodes_id_set)
         # 判断时间,应该有前24小时的速度
-        if accident_time < pd.to_datetime("2018-10-02"):
-            print('accident time earlier than 2018-10-02')
+        if accident_time < pd.to_datetime("2016-01-01"):
+            print('accident time earlier than 2016-01-01')
             continue
         accident_dic["longitude"].append(node_info['XCoord'])
         accident_dic["latitude"].append(node_info['YCoord'])
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         index_id = random.randint(0, len(nodes.index)-1)
         random_node_id = nodes.index[index_id]
         random_node = nodes.loc[random_node_id]
-        date_range = pd.date_range(start="2018-10-02", end="2018-12-31", freq="1H")[:-1]
+        date_range = pd.date_range(start="2016-01-01", end="2016-12-31", freq="1H")[:-1]
         date_index = random.randint(0, len(date_range)-1)
         random_time = date_range[date_index]
         # 不处理不在grids中的node
