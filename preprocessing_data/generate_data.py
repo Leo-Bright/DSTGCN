@@ -124,7 +124,8 @@ if __name__ == "__main__":
         # 判断该点没发生事故
         duplicate = select_accident[select_accident.apply(lambda x: x['longitude'] == random_node['XCoord'] and
                                     x['latitude'] == random_node['YCoord'] and
-                                    pd.to_datetime(x['time']).strftime("%Y%m%d %H") == random_time.strftime("%Y%m%d %H"), axis=1)]
+                                    pd.to_datetime(x['time']).strftime("%Y%m%d %H") == random_time.strftime("%Y%m%d %H"),
+                                    axis=1)]  ## axis=1 means apply to every rows.
         if len(duplicate) > 0:
             print("duplicate")
             continue
