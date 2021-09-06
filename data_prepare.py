@@ -79,7 +79,7 @@ def gen_weather():
             # new_row.append(new_date_time)
             new_obs_data.append(new_row)
 
-    time_range = pd.date_range('2018-09-01', '2018-12-31', freq="1H")
+    time_range = pd.date_range('2016-01-01 00:00:00', '2016-12-31 23:59:59', freq="1H")
 
     for _tr in time_range:
         _dt = datetime.strptime(str(_tr), '%Y-%m-%d %H:%M:%S')
@@ -92,7 +92,7 @@ def gen_weather():
         weather_csv.writerows(new_obs_data)
 
     df_weather = pd.read_csv('data/weather_no_index.csv', header=0)
-    time_range = pd.date_range('2018-09-01 00:00:00', '2018-12-31 23:00:00', freq="1H")
+    time_range = pd.date_range('2016-01-01 00:00:00', '2016-12-31 23:59:59', freq="1H")
     df_weather.insert(0, 'index', time_range)
     df_weather.set_index('index', inplace=True)
     df_weather.to_csv('data/weather.csv')
