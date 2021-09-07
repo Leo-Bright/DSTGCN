@@ -12,7 +12,7 @@ from math import radians, cos, sin, asin, sqrt
 from datetime import datetime
 
 
-def gen_weather():
+def gen_weather(observation_file_path):
 
     date_format = '%Y-%m-%d%I:%M %p'
     new_date_format = '%Y/%m/%d %H:%M:%S'
@@ -20,7 +20,7 @@ def gen_weather():
 
     tr_set = set()
 
-    with open('data/observation.csv') as f:
+    with open(observation_file_path) as f:
         obs_csv = csv.reader(f)
         headers = next(obs_csv)
         new_headers = ['temp', 'dewPt', 'rh']
@@ -35,41 +35,40 @@ def gen_weather():
         new_obs_data.append(new_headers)
         for row in tqdm(obs_csv):
             new_row = []
+
             # temp
-            try:
-                new_row.append(float(row[2][:2]))
-            except:
-                new_row.append(float(row[2][:1]))
+            _temp = "".join(list(filter(str.isdigit, row[2])))
+            new_row.append(_temp)
+
             # dew_point
-            try:
-                new_row.append(float(row[3][:2]))
-            except:
-                new_row.append(float(row[3][:1]))
+            new_row.append("".join(list(filter(str.isdigit, row[3]))))
+
             # humidity
-            new_row.append(float(row[4].split(' ')[0]))
+            new_row.append("".join(list(filter(str.isdigit, row[4]))))
+            # new_row.append(float(row[4].split(' ')[0]))
+
             # wind direction
             for i in range(18):
                 new_row.append(0.0)
             # wind_speed
             new_row.append(row[6].split(' ')[0])
+
             # pressure
             new_row.append(float(row[8].split(' ')[0]))
+
             # wind type
             for i in range(14):
                 new_row.append(0.0)
             # feels like
-            try:
-                new_row.append(float(row[2][:2]))
-            except :
-                new_row.append(float(row[2][:1]))
+            new_row.append(_temp)
 
             date_time = row[0] + row[1]
             date_tuple = time.strptime(date_time, date_format)
             year, month, day, hour = date_tuple[:4]
-            if year != 2018:
+            if year != 2016:
                 continue
-            if month < 9:
-                continue
+            # if month < 9:
+            #     continue
             # new_date_time = time.strftime(new_date_format, date_tuple)
             _dt = datetime(year, month, day, hour)
             new_date_time = _dt.strftime(new_date_format)
@@ -346,7 +345,8 @@ def gen_edge_h5(input_edgelist, input_pois, output):
 
 if __name__ == '__main__':
 
-    gen_weather()
+    observation_file_path = 'data/observation.csv'
+    gen_weather(observation_file_path)
 
     # timeRange = pd.date_range('2018-10-01', periods=24, freq="1H")
     #

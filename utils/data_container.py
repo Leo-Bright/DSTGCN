@@ -68,8 +68,8 @@ def collate_fn(batch):
     return tuple(ret)
 
 
-# 填充速度文件
-def fill_speed(speed_data):
+# 填充csv速度文件
+def fill_speed_csv(speed_data):
     date_range = pd.date_range(start="2018-10-01", end="2018-12-31", freq="1H")[:-1]
     speed_data = speed_data.resample(rule="1H").mean()
     assert date_range[0] in speed_data.index
@@ -83,6 +83,16 @@ def fill_speed(speed_data):
                     break
             else:
                 raise ValueError(f"not find time slot for {date}")
+    return speed_data
+
+
+# 填充json速度文件
+def fill_speed_json(speed_data):
+    date_range = pd.date_range(start="2016-01-01 00:00:00", end="2016-12-31 23:59:59", freq="1H")
+    for key in tqdm(speed_data.keys(), 'Fill speed', total=len(speed_data.keys())):
+        speed_data[key] = [speed_data[key] for i in range(366 * 24)]
+    speed_data = pd.DataFrame(speed_data)
+    speed_data.set_index(date_range)
     return speed_data
 
 
@@ -192,11 +202,11 @@ def get_data_loaders(k_order, batch_size):
     """
     network_path = r'../data/newyork_roadnet.gpickle'
     node_attr_path = r'../data/edges_data.h5'
-    accident_path = r'../data/accident_10_201810_201812.h5'
-    # weather_path = "../data/weather.h5"
-    weather_path = "../data/weather.csv"
-    # speed_path = "../data/all_grids_speed.h5"
-    speed_path = "../data/speed_data/all_grids_speed_201810_201812.csv"
+    accident_path = r'../data/accident_10_2016.h5'
+    # weather_path = '../data/weather.h5'
+    weather_path = '../data/weather_2016.csv'
+    # speed_path = '../data/all_grids_speed.h5'
+    speed_path = '../data/all_grids_speed_data.json'
 
     sf_mean, sf_std = np.array(get_attribute('spatial_features_mean')), np.array(get_attribute('spatial_features_std'))
     tf_mean, tf_std = np.array(get_attribute('temporal_features_mean')), np.array(
@@ -217,8 +227,12 @@ def get_data_loaders(k_order, batch_size):
     weather = pd.read_csv(weather_path, index_col=0, parse_dates=True)
 
     # speed = fill_speed(pd.read_hdf(speed_path))
-    speed_data = pd.read_csv(speed_path, index_col=0, parse_dates=True)
-    speed = fill_speed(speed_data)
+    # speed_data = pd.read_csv(speed_path, index_col=0, parse_dates=True)
+    # speed = fill_speed_csv(speed_data)
+
+    with open(speed_path) as speed_file:
+        speed_data = json.loads(speed_file.readline())
+    speed = fill_speed_json(speed_data)
 
     dls = dict()
     for key in ['train', 'validate', 'test']:
