@@ -88,11 +88,11 @@ def fill_speed_csv(speed_data):
 
 # 填充json速度文件
 def fill_speed_json(speed_data):
-    date_range = pd.date_range(start="2016-01-01 00:00:00", end="2016-12-31 23:59:59", freq="1H")
+    # date_range = pd.date_range(start="2016-01-01 00:00:00", end="2016-12-31 23:59:59", freq="1H")
     for key in tqdm(speed_data.keys(), 'Fill speed', total=len(speed_data.keys())):
-        speed_data[key] = [speed_data[key] for i in range(366 * 24)]
-    speed_data = pd.DataFrame(speed_data)
-    speed_data.set_index(date_range)
+        speed_data[key] = [speed_data[key] for i in range(2)]
+    speed_data = pd.DataFrame(speed_data, index=['0', '1'])
+    # speed_data.set_index(date_range)
     return speed_data
 
 
@@ -146,7 +146,9 @@ class AccidentDataset(Dataset):
 
         # get temporal_features (speed)
         date_range = pd.date_range(end=accident_time.strftime("%Y%m%d %H"), freq="1H", periods=24)
-        selected_time = self.speed.loc[date_range]
+        # selected_time = self.speed.loc[date_range]
+        selected_time = pd.DataFrame()
+        selected_time = selected_time.append(self.speed.loc['0'] * 24)
 
         selected_nodes = self.nodes.loc[neighbors]
 
@@ -247,7 +249,7 @@ def get_data_loaders(k_order, batch_size):
                               shuffle=False,
                               drop_last=False,
                               collate_fn=collate_fn,
-                              num_workers=0)
+                              num_workers=8)
     return dls
 
 

@@ -20,7 +20,8 @@ def train_model(model: nn.Module,
                 loss_func: callable,
                 optimizer,
                 model_folder: str,
-                tensorboard_folder: str):
+                tensorboard_folder: str,
+                pid: int):
 
     phases = ['train', 'validate', 'test']
 
@@ -81,7 +82,7 @@ def train_model(model: nn.Module,
                     steps += truth_data.size(0)
 
                     tqdm_loader.set_description(
-                        f'{phase:8} epoch: {epoch:3}, {phase:8} loss: {running_loss[phase] / steps:3.6}')
+                        f'{pid:2} pid: {phase:8} epoch: {epoch:3}, {phase:8} loss: {running_loss[phase] / steps:3.6}')
 
                     # For the issue that the CPU memory increases while training. DO NOT know why, but it works.
                     torch.cuda.empty_cache()

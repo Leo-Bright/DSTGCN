@@ -67,7 +67,8 @@ class DSTGCN(nn.Module):
             # replace spatial-temporal layer
             self.replace_temporal_layer = fully_connected_layer(f_2, [5, 10], 20)
 
-        self.temporal_agg = nn.AvgPool1d(24)
+        # self.temporal_agg = nn.AvgPool1d(24)
+        self.temporal_agg = nn.AvgPool1d(1)
 
         self.external_embedding = fully_connected_layer(f_3, [(f_3 * (4 - i) + 10 * i) // 4 for i in (1, 4)], 10)
 
@@ -97,6 +98,7 @@ class DSTGCN(nn.Module):
         """
 
         if get_attribute("use_SBlock"):
+            # shape [nodes * 10]
             s_out = self.spatial_gcn(bg, self.spatial_embedding(spatial_features))
 
         else:
@@ -135,4 +137,5 @@ class DSTGCN(nn.Module):
         s_features = torch.stack(s_features)
         t_features = torch.stack(t_features)
 
+        # torch.cat((x, y), -1), x: 2 * 3, y: 2 * 5, result: 2 * 8
         return self.output_layer(torch.cat((s_features, t_features, e_out), -1))
