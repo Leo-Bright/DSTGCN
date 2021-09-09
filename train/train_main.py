@@ -74,7 +74,8 @@ def main(train_repeat_times):
                                   loss_func=loss_func,
                                   optimizer=optimizer,
                                   model_folder=model_folder,
-                                  tensorboard_folder=tensorboard_folder)
+                                  tensorboard_folder=tensorboard_folder,
+                                  pid=1)
 
         test_metrics.append(test_metric)
 
