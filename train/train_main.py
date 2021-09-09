@@ -60,24 +60,24 @@ def main(train_repeat_times):
         else:
             raise NotImplementedError()
 
-        # num_processes = 32
-        # model.share_memory()
-        # processes = []
-        # for i in range(num_processes):
-        #     process = mp.Process(target=train_model, args=(model, data_loaders, loss_func, optimizer, model_folder, tensorboard_folder, i))
-        #     process.start()
-        #     processes.append(process)
-        # for pid in processes:
-        #     pid.join()
-        test_metric = train_model(model=model,
-                                  data_loaders=data_loaders,
-                                  loss_func=loss_func,
-                                  optimizer=optimizer,
-                                  model_folder=model_folder,
-                                  tensorboard_folder=tensorboard_folder,
-                                  pid=1)
+        num_processes = 10
+        model.share_memory()
+        processes = []
+        for i in range(num_processes):
+            process = mp.Process(target=train_model, args=(model, data_loaders, loss_func, optimizer, model_folder, tensorboard_folder, i))
+            process.start()
+            processes.append(process)
+        for pid in processes:
+            pid.join()
+        # test_metric = train_model(model=model,
+        #                           data_loaders=data_loaders,
+        #                           loss_func=loss_func,
+        #                           optimizer=optimizer,
+        #                           model_folder=model_folder,
+        #                           tensorboard_folder=tensorboard_folder,
+        #                           pid=1)
 
-        test_metrics.append(test_metric)
+        # test_metrics.append(test_metric)
 
     # MSE, RMSE, MAE, PCC, P-VALUE, PRECISION, RECALL, F1-SCORE, AUC
     metrics = {}
