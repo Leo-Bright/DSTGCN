@@ -13,6 +13,8 @@ from utils.data_container import get_data_loaders
 from utils.load_config import get_attribute
 from utils.loss import MSELoss, BCELoss
 
+mp.set_sharing_strategy('file_system')
+
 
 def create_model() -> nn.Module:
     return DSTGCN(22, 1, 38 + 5)
